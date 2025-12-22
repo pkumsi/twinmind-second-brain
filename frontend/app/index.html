@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TwinMind Second Brain Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #030304;
+      --panel: #0d1016;
+      --panel-2: #0b0e14;
+      --border: #1a2230;
+      --text: #e6edf7;
+      --muted: #9aa7bd;
+      --accent: #72f1b8;
+      --accent-2: #5bc0f8;
+      --danger: #ff7b72;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Sora", "Segoe UI", sans-serif;
+      background: radial-gradient(140% 140% at 20% 20%, rgba(114,241,184,0.10), transparent 45%),
+                  radial-gradient(110% 110% at 80% 0%, rgba(91,192,248,0.08), transparent 50%),
+                  var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 32px 24px 12px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      padding: 6px 0;
+      color: var(--accent);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 4px;
+      font-size: 0.95rem;
+    }
+    main {
+      padding: 16px 24px 48px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.32);
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+    input[type="text"], input[type="url"], input[type="file"], textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      margin-bottom: 12px;
+      font-size: 0.96rem;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    button {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: #0b1222;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(114,241,184,0.22);
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .ghost {
+      background: #0b0e14;
+      color: var(--text);
+      border-color: var(--border);
+      box-shadow: none;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .log {
+      background: #0b0e14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "DM Mono", "SFMono-Regular", monospace;
+      font-size: 0.9rem;
+      max-height: 240px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .answer {
+      background: #0b0e14;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      line-height: 1.5;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .sources {
+      margin-top: 10px;
+      padding-left: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    @media (max-width: 700px) {
+      main { grid-template-columns: 1fr; padding: 16px; }
+      header { padding: 20px 16px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">TwinMind • Second Brain Prototype</p>
+    <h2>Ingest &amp; Chat</h2>
+    <p class="subtitle">Add stuff on the left, ask questions on the right. Keep the same user id if you want everything together.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Identity</h2>
+      <label for="userId">User ID (UUID)</label>
+      <input id="userId" type="text" placeholder="00000000-0000-0000-0000-000000000000" />
+      <div class="row" style="margin-top:6px;">
+        <button onclick="regenUserId(true)" class="ghost">New session</button>
+      </div>
+      <small style="color: var(--muted);">Auto-fills and persists locally; click “New session” to isolate from prior ingests.</small>
+    </section>
+
+    <section class="card">
+      <h2>Ingest (URL / PDF / Audio)</h2>
+      <small style="color: var(--muted); display:block; margin-bottom:8px;">Queue things one by one. They stay here until you start a new session.</small>
+      <label for="urlInput">Web URL</label>
+      <div class="row">
+        <input id="urlInput" type="url" placeholder="https://example.com/article" style="flex:1;" />
+        <button onclick="ingestUrl()">Queue URL</button>
+      </div>
+      <label for="pdfInput">PDF file</label>
+      <div class="row">
+        <input id="pdfInput" type="file" accept=".pdf" />
+        <button onclick="ingestPdf()">Upload PDF</button>
+      </div>
+      <label for="audioInput">Audio file (.mp3, .m4a, .wav)</label>
+      <div class="row">
+        <input id="audioInput" type="file" accept="audio/*" />
+        <button onclick="ingestAudio()">Upload Audio</button>
+      </div>
+      <small style="color: var(--muted);">You can ingest multiple files (one request per file). Chat will pull from all processed items for this user.</small>
+    </section>
+
+    <section class="card" style="grid-column: span 2;">
+      <h2>Chat</h2>
+      <label for="chatInput">Ask anything</label>
+      <textarea id="chatInput" placeholder="What did I read about vector search last week?"></textarea>
+      <div class="row">
+        <button onclick="ask()">Send</button>
+        <button onclick="clearAnswer()" style="background:#1f2b46; color: var(--text);">Clear</button>
+      </div>
+      <div id="answer" class="answer" style="display:none;"></div>
+      <div id="sources" class="sources"></div>
+    </section>
+
+    <section class="card" style="grid-column: span 2;">
+      <h2>Activity</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+
+  <script>
+    const logEl = document.getElementById("log");
+    const answerEl = document.getElementById("answer");
+    const sourcesEl = document.getElementById("sources");
+
+    const log = (msg, isError = false) => {
+      const time = new Date().toLocaleTimeString();
+      const line = `[${time}] ${msg}\n`;
+      logEl.textContent = line + logEl.textContent;
+      if (isError) logEl.style.borderColor = "var(--danger)";
+    };
+
+    const getUserId = () => {
+      const id = document.getElementById("userId").value.trim();
+      if (!id) throw new Error("user_id is required");
+      localStorage.setItem("twinmind_user_id", id);
+      return id;
+    };
+
+    function resetUiForNewUser() {
+      document.getElementById("urlInput").value = "";
+      document.getElementById("pdfInput").value = "";
+      document.getElementById("audioInput").value = "";
+      document.getElementById("chatInput").value = "";
+      answerEl.style.display = "none";
+      answerEl.textContent = "";
+      sourcesEl.innerHTML = "";
+      logEl.textContent = "";
+    }
+
+    function regenUserId(clearUi = false) {
+      const id = crypto.randomUUID();
+      document.getElementById("userId").value = id;
+      localStorage.setItem("twinmind_user_id", id);
+      if (clearUi) resetUiForNewUser();
+      log("Generated new user_id (new session)");
+    }
+
+    (function initUserId() {
+      const saved = localStorage.getItem("twinmind_user_id");
+      if (saved) {
+        document.getElementById("userId").value = saved;
+      } else {
+        regenUserId();
+      }
+    })();
+
+    async function ingestUrl() {
+      try {
+        const userId = getUserId();
+        const url = document.getElementById("urlInput").value.trim();
+        if (!url) throw new Error("URL is required");
+        const resp = await fetch("/ingest/url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, url }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Failed to ingest URL");
+        log(`URL queued: job ${data.job_id}`);
+        pollJob(data.job_id, "url");
+      } catch (err) {
+        log(`URL ingest error: ${err.message}`, true);
+      }
+    }
+
+    async function ingestPdf() {
+      await ingestFile("pdf", "/ingest/pdf", "pdfInput");
+    }
+    async function ingestAudio() {
+      await ingestFile("audio", "/ingest/audio", "audioInput");
+    }
+
+    async function ingestFile(label, endpoint, inputId) {
+      try {
+        const userId = getUserId();
+        const fileInput = document.getElementById(inputId);
+        if (!fileInput.files.length) throw new Error(`Select a ${label} file first`);
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("user_id", userId);
+        formData.append("file", file);
+        const resp = await fetch(endpoint, { method: "POST", body: formData });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || `Failed to ingest ${label}`);
+        log(`${label} queued: job ${data.job_id}`);
+        pollJob(data.job_id, label);
+      } catch (err) {
+        log(`${label} ingest error: ${err.message}`, true);
+      }
+    }
+
+    async function pollJob(jobId, label, attempt = 0) {
+      try {
+        const resp = await fetch(`/ingest/job/${jobId}`);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "job status failed");
+
+        if (data.status === "SUCCEEDED") {
+          log(`${label} job ${jobId} finished`);
+          return;
+        }
+        if (data.status === "FAILED") {
+          log(`${label} job ${jobId} failed: ${data.error_message || "unknown error"}`, true);
+          return;
+        }
+        // pending/running
+        if (attempt < 20) {
+          setTimeout(() => pollJob(jobId, label, attempt + 1), 1500);
+        } else {
+          log(`${label} job ${jobId} still ${data.status} after waiting`, true);
+        }
+      } catch (err) {
+        log(`Job ${jobId} status error: ${err.message}`, true);
+      }
+    }
+
+    async function ask() {
+      try {
+        const userId = getUserId();
+        const query = document.getElementById("chatInput").value.trim();
+        if (!query) throw new Error("Question is empty");
+        answerEl.style.display = "block";
+        answerEl.textContent = "Thinking...";
+        sourcesEl.innerHTML = "";
+
+        const resp = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, query }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Chat failed");
+
+        answerEl.textContent = data.answer || "(no answer)";
+        renderSources(data.sources || []);
+        log("Chat answered");
+      } catch (err) {
+        answerEl.style.display = "block";
+        answerEl.textContent = err.message;
+        sourcesEl.innerHTML = "";
+        log(`Chat error: ${err.message}`, true);
+      }
+    }
+
+    function renderSources(sources) {
+      if (!sources.length) {
+        sourcesEl.textContent = "";
+        return;
+      }
+      sourcesEl.innerHTML = "<strong>Sources</strong><br/>";
+      sources.forEach((s, idx) => {
+        const item = document.createElement("div");
+        item.style.marginBottom = "8px";
+        item.innerHTML = `[${idx + 1}] ${s.title || "Untitled"} — <span style="color: var(--text);">${s.source_uri || ""}</span>`;
+        sourcesEl.appendChild(item);
+      });
+    }
+
+    function clearAnswer() {
+      answerEl.style.display = "none";
+      answerEl.textContent = "";
+      sourcesEl.innerHTML = "";
+    }
+  </script>
+</body>
+</html>

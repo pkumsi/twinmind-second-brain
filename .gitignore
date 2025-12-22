@@ -1,0 +1,45 @@
+
+
+
+# Python
+
+__pycache__/
+
+*.pyc
+
+.venv/
+
+.env
+
+.env.local
+
+.env.*.local
+
+# Node/Frontend
+
+node_modules/
+
+.next/
+
+dist/
+
+*.log
+
+# OS/editor
+
+.DS_Store
+
+.idea/
+
+.vscode/
+
+# Py cache/coverage
+
+*.egg-info/
+
+.coverage
+
+htmlcov/
+
+
+
