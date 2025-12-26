@@ -54,4 +54,4 @@ Foundational “second brain” prototype that ingests web URLs, PDFs, and audio
 - **System design:** `backend/docs/system_design.md`
 - **Source:** This repo
 - **Demo/UI:** Served at `http://127.0.0.1:8000/`
-- **Video (optional per assignment):** Record a short walkthrough of architecture + UI/flow.
+
